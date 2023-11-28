@@ -168,4 +168,5 @@ def save_lr_and_pipelines(lr, pipeline_dict, save_dir):
             f.write(key + ": ")
             f.write(str(value))
             f.write("\n")
+        f.write(str(pipeline_dict['alpha']))
     # print(f"Data saved to {file_path}")
