@@ -145,7 +145,8 @@ def save_result(result, model_dict, logger, params, save_dir, save_model=False):
     # save logger
     if logger is not None:
         logger.save(utils.makedir([save_dir, "logging"]))
-
+    del params['alpha']
+    del params['beta']
     # save params and results
     with open(os.path.join(save_dir, "params.json"), "w") as f:
         json.dump(params, f, indent=4)

@@ -20,6 +20,7 @@ class Transformer(object):
         self.tf_probs[range(len(tf_idx_choices)), tf_idx_choices] = 1 # (features,)
 
     def forward(self, X, is_fit):
+        X = X.reshape(1, -1).T
         # train tfs
         X_trans = []
         for tf in self.tf_options:
@@ -32,8 +33,8 @@ class Transformer(object):
             X_trans.append(X_t)
         
         # All transformations
-        X_trans = np.concatenate(X_trans, axis=2) # shape (num_examples, num_features, num_tfs)
-        X_output = np.sum(X_trans * np.expand_dims(self.tf_probs, axis=0), axis=2)
+        X_trans = np.concatenate(X_trans, axis=1) # shape (num_examples, num_features, num_tfs)
+        X_output = np.sum(X_trans * np.expand_dims(self.tf_probs, axis=0), axis=1)
         return X_output
 
 class BaselineFirstTransformer(object):
@@ -230,11 +231,13 @@ def get_num_cat_features(X_train):
 
 class BaselinePipeline(object):
     """ Data preparation pipeline"""
-    def __init__(self, method, prep_space, random_state=1):
+    def __init__(self, method, prep_space, random_state=1, alpha=None, beta=None):
         assert(method in ["default", "random", "random_flex"])
         self.method = method
         self.prep_space = prep_space
         self.random_state = random_state
+        self.alpha = alpha
+        self.beta = beta
 
     def fit_transform(self, X_train, X_val, X_test):
         np.random.seed(self.random_state)
@@ -269,27 +272,39 @@ class BaselinePipeline(object):
         X_trans = first_transformer.fit_transform(X_train)
 
         self.pipeline.append(first_transformer)
+        for col_index in range(X_trans.shape[1]):
+            for j in range(len(self.prep_space[1:])):
+                tft = np.argmax(self.alpha[col_index][j])
+                tf_dict = self.prep_space[1:][tft]
+                index = self.beta[tft][col_index]
+            # for tf_dict in self.prep_space[1:]:
+                if self.method == "default":
+                    tf_options = [tf_dict["default"]]
+                elif self.method == "random":
+                    tf_options = [random_select(tf_dict["tf_options"])]
+                    # print(tf_options[0].method)
+                elif self.method == "fixed":
+                    tf_options = tf_dict["tf_options"][index]
+                else:
+                    tf_options = tf_dict['tf_options']
 
-        for tf_dict in self.prep_space[1:]:
-            if self.method == "default":
-                tf_options = [tf_dict["default"]]
-            elif self.method == "random":
-                tf_options = [random_select(tf_dict["tf_options"])]
-                # print(tf_options[0].method)
-            else:
-                tf_options = tf_dict['tf_options']
-
-            transformer = Transformer(tf_dict['name'], tf_options, X_trans.shape[1])
-            X_trans = transformer.forward(X_trans, is_fit=True)
-            self.pipeline.append(transformer)
+                transformer = Transformer(tf_dict['name'], tf_options, 1)
+                X_trans[:, col_index] = transformer.forward(X_trans[:, col_index], is_fit=True).T
+                self.pipeline.append(transformer)
 
         return X_trans
 
     def transform(self, X):
         X_output = deepcopy(X)
-
-        for transformer in self.pipeline:
-            # print('doing ', transformer.name)
-            # forward
-            X_output = transformer.forward(X_output, is_fit=False)
+        X_output = self.pipeline[0].forward(X_output, is_fit=False)
+        for col_index in range(X_output.shape[1]):
+            for i in range(1, len(self.pipeline), 3):
+                transformer_1 = self.pipeline[i]
+                transformer_2 = self.pipeline[i + 1]
+                transformer_3 = self.pipeline[i + 2]
+                # print('doing ', transformer.name)
+                # forward
+                X_output[:, col_index] = transformer_1.forward(X_output[:, col_index], is_fit=False).T
+                X_output[:, col_index] = transformer_2.forward(X_output[:, col_index], is_fit=False).T
+                X_output[:, col_index] = transformer_3.forward(X_output[:, col_index], is_fit=False).T
         return X_output

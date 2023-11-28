@@ -53,7 +53,7 @@ class DiffPrepExperiment(object):
         else:
             raise Exception("Wrong auto prep method")
 
-        prep_pipeline.init_parameters(X_train, X_val, X_test)
+        # prep_pipeline.init_parameters(X_train, X_val, X_test)
         print("Train size: ({}, {})".format(X_train.shape[0], prep_pipeline.out_features))
 
         # model
@@ -84,7 +84,7 @@ class DiffPrepExperiment(object):
             prep_lr = params["model_lr"]
         else:
             prep_lr = params["prep_lr"]
-    
+
         prep_pipeline_optimizer = torch.optim.Adam(
             prep_pipeline.parameters(),
             lr=prep_lr,

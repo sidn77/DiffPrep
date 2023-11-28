@@ -1,16 +1,18 @@
 import utils
 import argparse
-from prep_space import space_large as space
+from prep_space import space as space
+from alpha_pr import alpha
 from experiment.baseline_experiment import run_baseline
 import torch
 from datetime import date
 import os
 import time
+import numpy as np
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None)
-parser.add_argument('--data_dir', default="data/Dataset0928")
+parser.add_argument('--data_dir', default="data")
 parser.add_argument('--result_dir', default="result")
-parser.add_argument('--method', default="random_fix", choices=["default", "random_fix", "random_flex"])
+parser.add_argument('--method', default="random_fix", choices=["default", "random_fix", "random_flex", "fixed"])
 parser.add_argument('--model', default="log", choices=["log", "two"])
 parser.add_argument('--gpu', action="store_true", default=False)
 parser.add_argument('--split_seed', default=1, type=None)
@@ -22,20 +24,33 @@ parser.add_argument('--cpu', default=1, type=int)
 parser.add_argument('--group', default=0, type=int)
 args = parser.parse_args()
 
+def read_file():
+    file_path = "./best_pipeline_pr.json"
+    import json
+    beta = []
+    with open(file_path) as f:
+        d = json.load(f)
+    for key in d:
+        if key != "pipeline.0.num_tf_prob_logits" and key != "pipeline.0.cat_tf_prob_logits":
+            beta.append(d[key])
+    beta = np.array(beta)
+    return beta
 # args.all = True
 
 # define hyper parameters
 params = {
-    "num_epochs": 2000,
+    "num_epochs": 3000,
     "batch_size": 512,
     "device": "cpu",
     "model_lr": [0.1, 0.01, 0.001],
     "weight_decay": 0,
     "train_seed": args.train_seed,
     "no_crash": args.no_crash,
-    "patience": 3,
+    "patience": 10,
     "logging": True,
-    "split_seed": args.split_seed
+    "split_seed": args.split_seed,
+    "alpha": np.array(alpha),
+    "beta": read_file()
 }
 
 if args.gpu and torch.cuda.is_available():
@@ -62,4 +77,4 @@ for i, dataset in enumerate(datasets):
     result_dir = utils.makedir([args.result_dir, dataset, args.method])
     tic = time.time()
     run_baseline(args.data_dir, dataset, result_dir, space, params, args.model, args.method)
-    utils.save_prep_space(space, result_dir)
+    # utils.save_prep_space(space, result_dir)

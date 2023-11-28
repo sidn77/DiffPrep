@@ -28,7 +28,7 @@ class BaselineExperiment(object):
         X_train, y_train, X_val, y_val, X_test, y_test = build_data(X, y, random_state=params["split_seed"])
         
         # data prep pipeline
-        prep_pipeline = BaselinePipeline(self.method, self.prep_space, self.tf_seed)
+        prep_pipeline = BaselinePipeline(self.method, self.prep_space, random_state=self.tf_seed, alpha=params["alpha"], beta=params["beta"])
         X_train = prep_pipeline.fit_transform(X_train, X_val, X_test)
         X_val = prep_pipeline.transform(X_val)
         X_test = prep_pipeline.transform(X_test)
@@ -103,7 +103,7 @@ def random_search(data_dir, dataset, result_dir, prep_space, params, model_name,
         pd.DataFrame(summary).to_csv(makedir([result_dir], "summary.csv"), index=False)
 
 def run_baseline(data_dir, dataset, result_dir, prep_space, params, model_name, method, num_random=20):
-    if method == "default":
+    if method == "default" or method == "fixed":
         # baseline 1: default
         baseline_default = BaselineExperiment(data_dir, dataset, prep_space, "default", model_name)
         default_result, default_model, default_logger, default_params = grid_search(baseline_default, params)
