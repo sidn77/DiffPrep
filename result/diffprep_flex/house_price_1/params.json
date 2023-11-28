@@ -1,6 +1,6 @@
 {
     "num_epochs": 10,
-    "batch_size": 1024,
+    "batch_size": 512,
     "device": "cuda",
     "weight_decay": 0,
     "model": "reg",
@@ -10,7 +10,7 @@
     "save_model": true,
     "logging": false,
     "no_crash": false,
-    "patience": 2,
+    "patience": 3,
     "momentum": 0.9,
     "task": "regression",
     "prep_lr": null,
