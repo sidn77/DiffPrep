@@ -75,10 +75,16 @@ def remove_large_cat(X):
     X = X[columns]
     return X
 
-def build_data(X, y, random_state=1):
-    label_enc = LabelEncoder()
-    y_enc = label_enc.fit_transform(y.values.ravel())
-    y_enc = torch.tensor(y_enc).long()
+def build_data(X, y, model, random_state=1):
+    if model != "reg":
+        label_enc = LabelEncoder()
+        y_enc = label_enc.fit_transform(y.values.ravel())
+        y_enc = torch.tensor(y_enc).long()
+    # print(y_enc)
+    else:
+        y_enc = torch.tensor(y.values.ravel()).float()
+        y_enc = torch.reshape(y_enc, (-1,))
+        print("Regression")
     
     X = remove_large_cat(X)
     # print("Data size:", X.shape)

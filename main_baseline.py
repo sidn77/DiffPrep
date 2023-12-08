@@ -1,7 +1,7 @@
 import utils
 import argparse
 from prep_space import space as space
-from alpha_pr import alpha
+from best_pipelines.alphas import alpha_ab_r, alpha_p_c, alpha_hp_r, alpha_hp_c, alpha_aba_c
 from experiment.baseline_experiment import run_baseline
 import torch
 from datetime import date
@@ -13,7 +13,7 @@ parser.add_argument('--dataset', default=None)
 parser.add_argument('--data_dir', default="data")
 parser.add_argument('--result_dir', default="result")
 parser.add_argument('--method', default="random_fix", choices=["default", "random_fix", "random_flex", "fixed"])
-parser.add_argument('--model', default="log", choices=["log", "two"])
+parser.add_argument('--model', default="log", choices=["log", "two", "reg"])
 parser.add_argument('--gpu', action="store_true", default=False)
 parser.add_argument('--split_seed', default=1, type=None)
 parser.add_argument('--train_seed', default=1, type=int)
@@ -25,7 +25,7 @@ parser.add_argument('--group', default=0, type=int)
 args = parser.parse_args()
 
 def read_file():
-    file_path = "./best_pipeline_pr.json"
+    file_path = "./best_pipelines/bestpipelines_hp_c.json"
     import json
     beta = []
     with open(file_path) as f:
@@ -49,7 +49,7 @@ params = {
     "patience": 10,
     "logging": True,
     "split_seed": args.split_seed,
-    "alpha": np.array(alpha),
+    "alpha": np.array(alpha_hp_c),
     "beta": read_file()
 }
 
