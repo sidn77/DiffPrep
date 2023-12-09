@@ -15,6 +15,7 @@ from utils import logits_to_probs
 import pprint
 import os
 import json
+import sys
 
 class DiffPrepExperiment(object):
     """Run auto prep with one set of hyper parameters"""
@@ -157,6 +158,7 @@ def save_lr_and_pipelines(lr, pipeline_dict, save_dir):
     elif lr == 0.001:
         keys_to_save += ['pipeline.7.tf_prob_logits', 'pipeline.8.tf_prob_logits', 'pipeline.9.tf_prob_logits']
     
+    np.set_printoptions(threshold=sys.maxsize)
     # print(data_to_save_dict)
     # Extract the relevant data from the dictionary
     data_to_save = {key: data_to_save_dict[key] for key in keys_to_save if key in data_to_save_dict}
