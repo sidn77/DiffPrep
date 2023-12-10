@@ -39,7 +39,7 @@ python main.py --dataset <dataset_name> --method <method_name> --model <model_na
 The following command will train and evaluate an ML model for a given dataset and pipeline configuration defined by alpha and beta matrices. This experiment requires the checking out of branch `run_pipe` before execution.
 
 ```
-python main_baseline.py --dataset house_price_1 --model log --method fixed
+python main_baseline.py --dataset <dataset_name> --model <model_name> --method fixed
 ```
 
 ### Parameters
