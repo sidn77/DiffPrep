@@ -51,7 +51,7 @@ python main_baseline.py --dataset <dataset_name> --model <model_name> --method f
 - `random`: This approach searches for a pipeline by training ML models with randomly sampled pipelines 20 times and selecting the one with the best validation accuracy.
 - `diffprep_fix`: This is our approach with a pre-defined fixed transformation order.
 - `diffprep_flex`: This is our approach with a flexible transformation order.
-- `fixed`: This is the approach with a user-defined transformation order and operation type.
+- `fixed`: This is the approach with a user-defined (using the alpha and beta matrices) transformation order and operation type.
 
 **model_name**: There are 2 available ML models.
 - `log`: Logistic Regression
