@@ -74,7 +74,32 @@ The results will be saved in the folder `<result_dir>/<method_name>/<dataset_nam
 - `bestpipelines.json`: This file stores the alpha and beta matrices after converting the logits to probabilities corresponding to the model with highest test accuracy.   
 
 
+# Visualizations and Distance Calculation
+For each dataset, two bestpipelines.json files will be generated. For example, for the abalone dataset, the following two files will be created:
 
+bestpipelines_aba_c.json – corresponding to classification
+bestpipelines_aba_r.json – corresponding to regression
+
+then for each visualization file, (pca.ipynb, mds.ipynb, t_sne.ipynb) update the following:
+
+file_path_pc = bestpipelines_aba_c.json  - path to classification file 
+file_path_pr = bestpipelines_aba_r.json  - path to regression file 
+
+then run the visualization file which you just updated.
+
+this should generate the 2-d visualization and print out the distance values for the 5 distance metrics, and the total number of features. For example,
+
+bestpipelines_mozilla_c.json bestpipelines_mozilla_r.json 
+[cosine_totaldist, euclid_totaldist, manhattan_totaldist, chebyshev_totaldist, canberra_totaldist] 
+[11.120676452028675, 23.567524488152976, 29.675894607101863, 21.936217949550354, 16.971087403210998].
+
+To calculate the Pearson correlation coefficient:
+
+Divide the distances obtained by the number of features. The number of features will be printed out when you run the tsne.ipynb visualization file.
+
+Run 
+
+scipy.stats.pearsonr(x, y) where x is the
 
 
 
