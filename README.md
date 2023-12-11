@@ -75,19 +75,17 @@ The results will be saved in the folder `<result_dir>/<method_name>/<dataset_nam
 
 
 # Visualizations and Distance Calculation
-For each dataset, two bestpipelines.json files will be generated. For example, for the abalone dataset, the following two files will be created:
+For running the notebooks the branch `run_pipe` will need to be checked out. For each dataset, two bestpipelines.json files will be generated. For example, for the abalone dataset, the following two files will be created:
 
 bestpipelines_aba_c.json – corresponding to classification
 bestpipelines_aba_r.json – corresponding to regression
 
-then for each visualization file, (pca.ipynb, mds.ipynb, t_sne.ipynb) update the following:
+For each visualization file, (`pca.ipynb`, `mds.ipynb`, `t_sne.ipynb`) update the following:
 
 file_path_pc = bestpipelines_aba_c.json  - path to classification file 
 file_path_pr = bestpipelines_aba_r.json  - path to regression file 
 
-then run the visualization file which you just updated.
-
-this should generate the 2-d visualization and print out the distance values for the 5 distance metrics, and the total number of features. For example,
+Then run the visualization file that was just updated. This will generate the 2-d visualization and print out the distance values for the 5 distance metrics, and the total number of features. For example,
 
 bestpipelines_mozilla_c.json bestpipelines_mozilla_r.json 
 [cosine_totaldist, euclid_totaldist, manhattan_totaldist, chebyshev_totaldist, canberra_totaldist] 
@@ -98,8 +96,12 @@ To calculate the Pearson correlation coefficient:
 Divide the distances obtained by the number of features. The number of features will be printed out when you run the tsne.ipynb visualization file.
 
 Run 
+```
+from scipy.stats import pearsonr 
+scipy.stats.pearsonr(x, y)
+```
 
-scipy.stats.pearsonr(x, y) where x is the
+where `x` is the the drop in accuracy across the different datasets and `y`  is the average distance values across datasets for a given visualization and distance metric combination.
 
 
 
