@@ -13,6 +13,8 @@ from .experiment_utils import min_max_normalize
 from copy import deepcopy
 from utils import logits_to_probs
 import pprint
+import os
+import json
 
 class DiffPrepExperiment(object):
     """Run auto prep with one set of hyper parameters"""
@@ -32,7 +34,7 @@ class DiffPrepExperiment(object):
             X_train, X_val, X_test = min_max_normalize(X_train, X_val, X_test)
         params["patience"] = 10
         params["num_epochs"] = 3000
-
+        
         # set random seed
         set_random_seed(params)
 
@@ -51,7 +53,7 @@ class DiffPrepExperiment(object):
         else:
             raise Exception("Wrong auto prep method")
 
-        prep_pipeline.init_parameters(X_train, X_val, X_test)
+        # prep_pipeline.init_parameters(X_train, X_val, X_test)
         print("Train size: ({}, {})".format(X_train.shape[0], prep_pipeline.out_features))
 
         # model
@@ -82,7 +84,7 @@ class DiffPrepExperiment(object):
             prep_lr = params["model_lr"]
         else:
             prep_lr = params["prep_lr"]
-    
+
         prep_pipeline_optimizer = torch.optim.Adam(
             prep_pipeline.parameters(),
             lr=prep_lr,
@@ -113,13 +115,58 @@ def run_diffprep(data_dir, dataset, result_dir, prep_space, params, model_name, 
     diff_prep_exp = DiffPrepExperiment(data_dir, dataset, prep_space, model_name, method)
     best_result, best_model, best_logger, best_params = grid_search(diff_prep_exp, deepcopy(params))
     dict = {}
-    logits = [dict.update({key: np.argmax(values, axis=1)}) for key, values in best_model['prep_pipeline'].items()]
+    logits = [dict.update({key: values}) for key, values in best_model['prep_pipeline'].items()]
     # print(logits_to_probs(torch.FloatTensor(logits[0])))
-    print(dict['alpha'])
-    print("\n")
-    p = pprint.PrettyPrinter(width=41)
-    p.pprint([(key, logits_to_probs(values)) for key, values in best_model['prep_pipeline'].items() if key != 'alpha'])
+    # print(dict)
+    save_lr_and_pipelines(best_params["model_lr"], dict, result_dir)
+    # p = pprint.PrettyPrinter(width=41)
+    # p.pprint([(key, logits_to_probs(values)) for key, values in best_model['prep_pipeline'].items() if key != 'alpha'])
     # pipe_line = [np.argmax(values, axis=1) for key, values in best_model['prep_pipeline'].items()]
     # print(np.unique(pipe_line[0], return_counts=True, axis=0))
     save_result(best_result, best_model, best_logger, best_params, result_dir, save_model=False)
     print("DiffPrep Finished. val acc:", best_result["best_val_acc"], "test acc", best_result["best_test_acc"])
+
+
+def logits_to_probs(logits):
+    """Convert logits to probabilities."""
+    logits = logits.float()  # Convert the tensor to float type
+    probs = torch.nn.functional.softmax(logits, dim=-1)
+    return probs
+
+def tensor_to_list(tensor):
+    """Convert tensors to lists for JSON serialization."""
+    if isinstance(tensor, torch.Tensor):
+        return tensor.tolist()
+    return tensor
+
+def save_lr_and_pipelines(lr, pipeline_dict, save_dir):
+    # Convert the logits to probabilities and filter out the 'alpha' key
+    data_with_probs = [(key, logits_to_probs(value)) for key, value in pipeline_dict.items() if key != 'alpha']
+
+    # Convert the data to a dictionary for saving
+    data_to_save_dict = {key: tensor_to_list(value) for key, value in data_with_probs}
+    # Decide the filename extension, json is a good format for structured data
+    file_path = os.path.join(save_dir, 'bestpipelines.json')
+  
+    # Select the appropriate keys based on the learning rate
+    keys_to_save = ['pipeline.0.num_tf_prob_logits', 'pipeline.0.cat_tf_prob_logits']
+    if lr == 0.1:
+        keys_to_save += ['pipeline.1.tf_prob_logits', 'pipeline.2.tf_prob_logits', 'pipeline.3.tf_prob_logits']
+    elif lr == 0.01:
+        keys_to_save += ['pipeline.4.tf_prob_logits', 'pipeline.5.tf_prob_logits', 'pipeline.6.tf_prob_logits']
+    elif lr == 0.001:
+        keys_to_save += ['pipeline.7.tf_prob_logits', 'pipeline.8.tf_prob_logits', 'pipeline.9.tf_prob_logits']
+    
+    # print(data_to_save_dict)
+    # Extract the relevant data from the dictionary
+    data_to_save = {key: data_to_save_dict[key] for key in keys_to_save if key in data_to_save_dict}
+    # print(data_to_save)
+    # Write the data to a file in the specified directory
+    with open(file_path, 'w') as f:
+        count = 0
+        for key, value in data_to_save.items():
+            f.write(key + ": ")
+            f.write(str(value))
+            f.write("\n")
+        f.write(str(pipeline_dict['alpha']))
+    # print(f"Data saved to {file_path}")

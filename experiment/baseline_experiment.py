@@ -25,10 +25,10 @@ class BaselineExperiment(object):
     def run(self, params, verbose=True):
         # load data
         X, y = load_data(self.data_dir, self.dataset)
-        X_train, y_train, X_val, y_val, X_test, y_test = build_data(X, y, random_state=params["split_seed"])
+        X_train, y_train, X_val, y_val, X_test, y_test = build_data(X, y, self.model_name, random_state=params["split_seed"])
         
         # data prep pipeline
-        prep_pipeline = BaselinePipeline(self.method, self.prep_space, self.tf_seed)
+        prep_pipeline = BaselinePipeline(self.method, self.prep_space, random_state=self.tf_seed, alpha=params["alpha"], beta=params["beta"])
         X_train = prep_pipeline.fit_transform(X_train, X_val, X_test)
         X_val = prep_pipeline.transform(X_val)
         X_test = prep_pipeline.transform(X_test)
@@ -45,6 +45,11 @@ class BaselineExperiment(object):
         set_random_seed(params)
         if self.model_name == "log":
             model = LogisticRegression(input_dim, output_dim)
+        elif self.model_name == "reg":
+            model = torch.nn.Sequential(torch.nn.Linear(input_dim, 4),
+                                        torch.nn.GELU(),
+                                        nn.Dropout(p=0.2),
+                                        torch.nn.Linear(4, 1))
         else:
             raise Exception("Wrong model name")
 
@@ -54,7 +59,10 @@ class BaselineExperiment(object):
         model = model.to(params["device"])
 
         # loss
-        loss_fn = nn.CrossEntropyLoss()
+        if self.model_name == "log":
+            loss_fn = nn.CrossEntropyLoss()
+        elif self.model_name == "reg":
+            loss_fn = nn.MSELoss()
 
         # optimizer
         model_optimizer = torch.optim.SGD(
@@ -103,12 +111,12 @@ def random_search(data_dir, dataset, result_dir, prep_space, params, model_name,
         pd.DataFrame(summary).to_csv(makedir([result_dir], "summary.csv"), index=False)
 
 def run_baseline(data_dir, dataset, result_dir, prep_space, params, model_name, method, num_random=20):
-    if method == "default":
+    if method == "default" or method == "fixed":
         # baseline 1: default
         baseline_default = BaselineExperiment(data_dir, dataset, prep_space, "default", model_name)
         default_result, default_model, default_logger, default_params = grid_search(baseline_default, params)
         save_result(default_result, default_model, default_logger, default_params, result_dir, save_model=False)
-        print("val acc:", default_result["best_val_acc"], "test acc", default_result["best_test_acc"])
+        print("val acc: %.10f" % default_result["best_val_acc"], "test acc: %0.10f" %  default_result["best_test_acc"])
 
     elif method == "random":
         # baseline 2: random_fix

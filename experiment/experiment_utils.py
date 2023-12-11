@@ -75,10 +75,16 @@ def remove_large_cat(X):
     X = X[columns]
     return X
 
-def build_data(X, y, random_state=1):
-    label_enc = LabelEncoder()
-    y_enc = label_enc.fit_transform(y.values.ravel())
-    y_enc = torch.tensor(y_enc).long()
+def build_data(X, y, model, random_state=1):
+    if model != "reg":
+        label_enc = LabelEncoder()
+        y_enc = label_enc.fit_transform(y.values.ravel())
+        y_enc = torch.tensor(y_enc).long()
+    # print(y_enc)
+    else:
+        y_enc = torch.tensor(y.values.ravel()).float()
+        y_enc = torch.reshape(y_enc, (-1,))
+        print("Regression")
     
     X = remove_large_cat(X)
     # print("Data size:", X.shape)
@@ -145,7 +151,8 @@ def save_result(result, model_dict, logger, params, save_dir, save_model=False):
     # save logger
     if logger is not None:
         logger.save(utils.makedir([save_dir, "logging"]))
-
+    del params['alpha']
+    del params['beta']
     # save params and results
     with open(os.path.join(save_dir, "params.json"), "w") as f:
         json.dump(params, f, indent=4)
