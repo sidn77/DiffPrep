@@ -93,7 +93,7 @@ bestpipelines_mozilla_c.json bestpipelines_mozilla_r.json
 
 To calculate the Pearson correlation coefficient:
 
-Divide the distances obtained by the number of features. The number of features will be printed out when you run the tsne.ipynb visualization file.
+Divide the distances obtained by the number of features. The number of features will be printed out when you run the `tsne.ipynb` visualization file.
 
 Run 
 ```
