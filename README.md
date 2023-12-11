@@ -103,5 +103,7 @@ scipy.stats.pearsonr(x, y)
 
 where `x` is the the drop in accuracy across the different datasets and `y`  is the average distance values across datasets for a given visualization and distance metric combination.
 
+## Link to the Kaggle notebooks that were used to run the experiments using Diffprep
+https://www.kaggle.com/sidn77/code
 
 
